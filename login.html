@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Login — Dashboard Cachorro do Bigode</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  min-height:100vh;
+  background:linear-gradient(135deg,#680505 0%,#CC0000 55%,#CF3034 100%);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+body::before{content:"";position:fixed;right:-80px;top:-80px;width:320px;height:320px;background:#FECF23;border-radius:50%;opacity:0.12;pointer-events:none}
+body::after{content:"";position:fixed;left:-60px;bottom:-60px;width:240px;height:240px;background:#FECF23;border-radius:50%;opacity:0.10;pointer-events:none}
+.card{background:#fff;border-radius:24px;width:100%;max-width:420px;box-shadow:0 32px 80px rgba(0,0,0,0.4);overflow:hidden;position:relative;z-index:1;}
+.card-body{padding:48px 40px 40px}
+.logo{text-align:center;margin-bottom:36px}
+.logo .emoji{font-size:60px;display:block;line-height:1}
+.logo h1{font-size:26px;font-weight:900;color:#680505;text-transform:uppercase;margin-top:14px;letter-spacing:-0.5px}
+.logo h1 span{color:#CC0000}
+.logo p{color:#999;font-size:13px;margin-top:6px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#888;margin-bottom:6px;}
+.input-wrap{position:relative}
+.input-wrap .icone{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:#bbb;pointer-events:none;}
+input[type=text],input[type=password]{width:100%;padding:13px 14px 13px 40px;border:2px solid #e5e5e5;border-radius:10px;font-size:15px;font-family:inherit;transition:border-color 0.2s,box-shadow 0.2s;outline:none;background:#fafafa;}
+input:focus{border-color:#CC0000;box-shadow:0 0 0 3px rgba(204,0,0,0.10);background:#fff}
+.show-pass{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#bbb;line-height:1;padding:4px;}
+.show-pass:hover{color:#CC0000}
+.btn-login{width:100%;padding:15px;margin-top:8px;background:linear-gradient(135deg,#680505,#CC0000);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:900;font-family:inherit;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:opacity 0.2s,transform 0.1s;}
+.btn-login:hover:not(:disabled){opacity:0.92;transform:translateY(-1px)}
+.btn-login:active:not(:disabled){transform:translateY(0)}
+.btn-login:disabled{opacity:0.55;cursor:not-allowed}
+.erro{display:none;margin-top:14px;padding:11px 14px;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:8px;font-size:13px;line-height:1.4;}
+.erro.show{display:block}
+.loading{display:none;text-align:center;margin-top:12px;color:#888;font-size:13px;}
+.loading.show{display:block}
+.card-footer{background:#FECF23;padding:12px 40px;font-size:11px;font-weight:700;color:#680505;text-align:center;text-transform:uppercase;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="card-body">
+    <div class="logo">
+      <span class="emoji">🌭</span>
+      <h1>Cachorro do <span>Bigode</span></h1>
+      <p>Dashboard Voz do Cliente · 2026</p>
+    </div>
+    <div class="form-group">
+      <label>Usuário</label>
+      <div class="input-wrap">
+        <span class="icone">👤</span>
+        <input type="text" id="usuario" placeholder="seu_usuario" autocomplete="username">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <div class="input-wrap">
+        <span class="icone">🔒</span>
+        <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+        <button class="show-pass" onclick="toggleSenha()" type="button" id="btnOlho" title="Mostrar/ocultar">👁️</button>
+      </div>
+    </div>
+    <button class="btn-login" id="btnLogin" onclick="fazerLogin()">Entrar</button>
+    <div class="erro" id="msgErro"></div>
+    <div class="loading" id="loading">🔄 Verificando credenciais...</div>
+  </div>
+  <div class="card-footer">Acesso restrito · Cachorro do Bigode</div>
+</div>
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzkkIg1flbHFQWUqixBg1Ml28CeX7hx9TIXmQ1fbQtm9CL61jcGR7g9XQp3IsJid59Kg/exec';
+(function(){try{var a=JSON.parse(sessionStorage.getItem('cdb_auth')||'null');if(a&&a.user&&a.role)window.location.href='index.html';}catch(e){}})();
+document.getElementById('usuario').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('senha').focus();});
+document.getElementById('senha').addEventListener('keydown',e=>{if(e.key==='Enter')fazerLogin();});
+function toggleSenha(){const inp=document.getElementById('senha');const olho=document.getElementById('btnOlho');if(inp.type==='password'){inp.type='text';olho.textContent='🙈';}else{inp.type='password';olho.textContent='👁️';}}
+async function fazerLogin(){const user=document.getElementById('usuario').value.trim();const pass=document.getElementById('senha').value;const btn=document.getElementById('btnLogin');const erro=document.getElementById('msgErro');const loading=document.getElementById('loading');erro.classList.remove('show');if(!user||!pass){mostrarErro('Preencha o usuário e a senha.');return;}btn.disabled=true;loading.classList.add('show');try{const url=APPS_SCRIPT_URL+'?action=login&user='+encodeURIComponent(user)+'&pass='+encodeURIComponent(pass);const resp=await fetch(url,{redirect:'follow'});const data=await resp.json();if(data.ok){sessionStorage.setItem('cdb_auth',JSON.stringify({user:user,role:data.role,lojas:data.lojas,nome:data.nome||user,masterKey:data.role==='master'?pass:null}));window.location.href='index.html';}else{mostrarErro(data.msg||'Usuário ou senha incorretos.');}}catch(e){mostrarErro('Erro de conexão. Verifique sua internet e tente novamente.');console.error(e);}finally{btn.disabled=false;loading.classList.remove('show');}}
+function mostrarErro(msg){const el=document.getElementById('msgErro');el.textContent=msg;el.classList.add('show');}
+</script>
+</body>
+</html>
