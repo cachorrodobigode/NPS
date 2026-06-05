@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Voz do Cliente 2026 — Cachorro do Bigode</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+// === VERIFICAÇÃO DE LOGIN ===
+(function(){
+  try {
+    var auth = JSON.parse(sessionStorage.getItem('cdb_auth') || 'null');
+    if (!auth || !auth.user || !auth.role) { window.location.href = 'login.html'; }
+  } catch(e) { window.location.href = 'login.html'; }
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+
+
+
+
+:root{
+  /* Cores */
+  --bordo:#680505;--bordo-claro:#8C1410;
+  --vermelho:#C42018;--vermelho-vivo:#D8261C;--vermelho-suave:#E0473A;
+  --laranja:#E16428;
+  --amarelo:#FEC83C;--amarelo-claro:#FCD34D;
+  --caramelo:#BE7820;--dourado:#D2A03C;
+  --creme:#FEF0C8;--creme-claro:#FDF8EE;
+  --azul:#73C6EF;
+  --cinza:#F6F1E7;--cinza-escuro:#2D211C;
+  --radius:22px;--radius-sm:16px;--radius-xs:10px;
+  --shadow:0 8px 30px rgba(104,5,5,0.07);
+  --shadow-hover:0 16px 48px rgba(104,5,5,0.15);
+  --shadow-sm:0 4px 16px rgba(104,5,5,0.06);
+  --font-display:system-ui,sans-serif;
+  --font-head:system-ui,sans-serif;
+  --font-body:system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:radial-gradient(circle at top right,#FFF6E0 0%,#FDF8EE 45%,#FBF5EA 100%);background-attachment:fixed;color:var(--cinza-escuro);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+.container{max-width:1400px;margin:0 auto;padding:24px}
+h1,h2,h3,h4{font-family:var(--font-head)}
+
+/* HEADER */
+.hero{background:linear-gradient(120deg,var(--bordo) 0%,#7A0D0A 45%,var(--vermelho) 100%);color:#fff;padding:28px 38px;border-radius:var(--radius);box-shadow:0 14px 44px rgba(104,5,5,0.34);position:relative;overflow:hidden;margin-bottom:22px}
+.hero::before{content:"";position:absolute;right:-50px;top:-60px;width:260px;height:260px;background:radial-gradient(circle,var(--amarelo) 0%,transparent 70%);opacity:0.28}
+.hero::after{content:"";position:absolute;right:160px;bottom:-90px;width:180px;height:180px;background:radial-gradient(circle,var(--laranja) 0%,transparent 70%);opacity:0.30}
+.hero-logo{height:62px;width:auto;position:relative;z-index:2;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.28))}
+.hero-titles{position:relative;z-index:2}
+.hero h1{font-family:var(--font-display);font-size:34px;font-weight:normal;letter-spacing:1px;text-transform:uppercase;line-height:1;color:#fff}
+.hero h1 span{color:var(--amarelo)}
+.hero .sub{font-size:13px;opacity:0.9;margin-top:6px;font-weight:400;letter-spacing:0.3px}
+.hero .periodo{display:inline-block;background:var(--amarelo);color:var(--bordo);padding:6px 16px;border-radius:100px;font-weight:700;font-size:13px;margin-top:14px;position:relative;z-index:2;text-transform:uppercase;letter-spacing:1px}
+
+/* FILTERS */
+.filter-bar{background:#fff;border-radius:var(--radius-sm);padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow-sm);border:2px solid var(--amarelo)}
+.filter-bar h3{font-size:13px;color:var(--bordo);font-weight:700;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.filter-bar h3 .badge{background:var(--vermelho);color:#fff;padding:3px 11px;border-radius:100px;font-size:11px;font-weight:700}
+.filter-row{display:flex;gap:16px;align-items:end;flex-wrap:wrap}
+.filter-group{flex:1;min-width:180px}
+.filter-group label{display:block;font-size:11px;text-transform:uppercase;color:#9a8d83;font-weight:700;margin-bottom:5px;letter-spacing:0.5px}
+.filter-group select,.filter-group input{
+  width:100%;padding:11px 13px;border:2px solid #EAE0CE;border-radius:var(--radius-xs);font-size:14px;font-family:inherit;
+  background:#fff;color:var(--cinza-escuro);transition:border-color 0.2s;
+}
+.filter-group select:focus,.filter-group input:focus{outline:none;border-color:var(--vermelho)}
+.btn-reset{background:var(--bordo);color:#fff;border:none;padding:11px 20px;border-radius:var(--radius-xs);font-weight:700;cursor:pointer;text-transform:uppercase;font-size:12px;letter-spacing:0.5px;transition:all 0.2s;height:44px;font-family:inherit}
+.btn-reset:hover{background:var(--vermelho);transform:translateY(-1px)}
+.filter-info{margin-top:10px;font-size:12px;color:#9a8d83;font-style:italic}
+.filter-info b{color:var(--bordo)}
+
+/* CHECKBOX MULTI-LOJA */
+.loja-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.loja-chip{
+  padding:8px 16px;border:2px solid #EAE0CE;border-radius:100px;
+  font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:700;
+  background:#fff;color:#9a8d83;
+}
+.loja-chip.active{background:linear-gradient(135deg,var(--bordo),var(--vermelho));color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(104,5,5,0.25)}
+.loja-chip:hover{border-color:var(--vermelho);color:var(--bordo)}
+.loja-chip.active:hover{color:#fff}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:24px}
+.kpi{background:#fff;border-radius:var(--radius-sm);padding:22px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--vermelho)}
+.kpi:hover{transform:translateY(-5px);box-shadow:var(--shadow-hover)}
+.kpi.yellow::before{background:var(--amarelo)}
+.kpi.bordo::before{background:var(--bordo)}
+.kpi.blue::before{background:var(--laranja)}
+.kpi.green::before{background:#2ecc71}
+.kpi .label{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:#9a8d83;font-weight:700}
+.kpi .value{font-family:var(--font-display);font-size:40px;font-weight:normal;color:var(--bordo);margin-top:8px;line-height:1;letter-spacing:0}
+.kpi .trend{font-size:12px;margin-top:8px;color:#857a70;font-weight:400}
+
+/* SECTION */
+.section{background:#fff;border-radius:var(--radius);padding:26px 28px;margin-bottom:20px;box-shadow:var(--shadow)}
+.section h2{font-size:24px;color:var(--bordo);margin-bottom:4px;font-weight:normal;font-family:var(--font-display);letter-spacing:0.5px;display:flex;align-items:center;gap:10px;text-transform:uppercase}
+.section h2 .emoji{margin-right:0;font-family:var(--font-body)}
+.section .h-sub{color:#9a8d83;font-size:13px;margin-bottom:22px;font-weight:400}
+.section h3{font-size:14px;color:var(--vermelho);margin:18px 0 12px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+@media (max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+.chart-box{background:var(--creme-claro);border-radius:var(--radius-sm);padding:20px;position:relative;border:1px solid #F0E6D2}
+.chart-box h4{font-size:12px;color:var(--bordo);margin-bottom:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;overflow:hidden;border-radius:var(--radius-xs)}
+thead{background:linear-gradient(135deg,var(--bordo),var(--bordo-claro));color:#fff}
+th{padding:13px 12px;text-align:left;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:0.5px}
+td{padding:11px 12px;border-bottom:1px solid #F1EADD}
+tr:hover{background:var(--creme-claro)}
+.nota-3{color:#27ae60;font-weight:800}
+.nota-2{color:var(--laranja);font-weight:800}
+.nota-1{color:var(--vermelho);font-weight:800}
+.pill{display:inline-block;padding:3px 11px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase}
+.pill-green{background:#d4edda;color:#155724}
+.pill-yellow{background:#FEF0C8;color:#8a5a00}
+.pill-red{background:#f8d7da;color:#721c24}
+.pill-gray{background:#eee6d6;color:#857a70}
+
+.empty-state{padding:40px;text-align:center;color:#b3a597;font-style:italic;background:var(--creme-claro);border-radius:var(--radius-xs)}
+
+footer{text-align:center;padding:24px;color:#b3a597;font-size:11px;margin-top:24px;font-weight:500}
+.chart-h-sm{height:260px}
+.chart-h-md{height:320px}
+.chart-h-lg{height:400px}
+
+.bar-list{margin-top:10px}
+.bar-row{margin-bottom:10px}
+.bar-row .bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.bar-row .bar-label .cat{font-weight:700;color:var(--bordo)}
+.bar-row .bar-label .num{font-weight:800;color:var(--vermelho)}
+.bar-bg{height:14px;background:var(--creme);border-radius:100px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--bordo),var(--vermelho),var(--laranja),var(--amarelo));border-radius:100px;transition:width 0.6s}
+
+.scroll-table{max-height:400px;overflow-y:auto;border-radius:var(--radius-xs)}
+
+/* === GOOGLE REVIEWS === */
+.reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+.review-store-card{background:#fff;border-radius:var(--radius-sm);padding:20px;border:1px solid #F0E6D2;box-shadow:var(--shadow-sm);transition:transform 0.25s,box-shadow 0.25s}
+.review-store-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+.review-store-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:14px;border-bottom:2px solid var(--creme)}
+.review-store-name{font-size:16px;font-weight:normal;font-family:var(--font-display);color:var(--bordo);text-transform:uppercase;letter-spacing:0.5px}
+.review-stars-big{color:#FBBC04;font-size:20px;letter-spacing:2px;margin-top:4px}
+.review-rating-num{text-align:right}
+.review-num{font-family:var(--font-display);font-size:40px;font-weight:normal;color:var(--bordo);line-height:1}
+.review-total{font-size:11px;color:#b3a597;display:block;text-align:right;margin-top:3px}
+.review-list{}
+.review-item{padding:9px 0;border-bottom:1px solid #F6EFE2}
+.review-item:last-child{border-bottom:none;padding-bottom:0}
+.review-header-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.review-author{font-size:12px;font-weight:700;color:#4a3f38;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.review-stars-sm{color:#FBBC04;font-size:12px;flex-shrink:0;letter-spacing:1px}
+.review-time-sm{font-size:10px;color:#b3a597;margin-top:1px}
+.review-text{font-size:12px;color:#6b5f56;margin-top:5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.review-empty-loja{font-size:12px;color:#b3a597;text-align:center;padding:16px 0}
+.google-logo{font-size:11px;color:#b3a597;margin-top:12px;text-align:right;font-style:italic}
+
+/* === BARRA GLOBAL DE LOJAS === */
+.loja-global-bar{background:#fff;border-radius:var(--radius-sm);padding:14px 20px;margin-bottom:12px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.loja-global-bar .lg-label{font-size:11px;font-weight:700;text-transform:uppercase;color:#b3a597;letter-spacing:1px;white-space:nowrap}
+
+/* === ABAS === */
+.tab-nav{display:flex;gap:6px;background:#fff;border-radius:var(--radius-sm);padding:8px;box-shadow:var(--shadow-sm);margin-bottom:20px;overflow-x:auto}
+.tab-btn{flex:1;min-width:130px;padding:13px 16px;border:none;background:none;border-radius:var(--radius-xs);font-size:12px;font-weight:700;cursor:pointer;color:#a89a8c;transition:all 0.25s;font-family:inherit;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
+.tab-btn.ativo{background:linear-gradient(135deg,var(--bordo),var(--vermelho));color:#fff;box-shadow:0 4px 14px rgba(104,5,5,0.32)}
+.tab-btn:hover:not(.ativo){background:var(--creme);color:var(--bordo)}
+.tab-panel{display:none;animation:fadeIn 0.35s ease}
+.tab-panel.ativo{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* === RESUMO POR LOJA === */
+.resumo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:20px}
+.store-resumo{background:#fff;border-radius:var(--radius-sm);padding:24px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s}
+.store-resumo::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,var(--bordo),var(--vermelho),var(--amarelo))}
+.store-resumo:hover{transform:translateY(-5px);box-shadow:var(--shadow-hover)}
+.store-resumo h3{font-size:19px;font-weight:normal;font-family:var(--font-display);color:var(--bordo);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--creme)}
+.ind-bloco-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#b3a597;margin:16px 0 8px;display:flex;align-items:center;gap:6px}
+.ind-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #F6EFE2}
+.ind-row:last-child{border-bottom:none}
+.ind-label{font-size:12px;font-weight:600;color:#857a70}
+.ind-val{font-family:var(--font-display);font-size:24px;font-weight:normal;color:var(--bordo);text-align:right;line-height:1}
+.ind-val.verde{color:#27ae60}
+.ind-val.amarelo{color:var(--laranja)}
+.ind-val.verm{color:var(--vermelho)}
+.ind-val.google-cor{color:#F0A500}
+.ind-sub-val{font-size:10px;color:#b3a597;display:block;text-align:right;margin-top:2px}
+.ind-breve{font-size:12px;color:#ccc;font-style:italic}
+
+/* === HERO USER BAR === */
+.hero-bar{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
+.hero-user{display:flex;align-items:center;gap:8px;position:relative;z-index:2;flex-shrink:0}
+.hero-user .user-nome{font-size:13px;font-weight:700;opacity:0.9;white-space:nowrap}
+.btn-hero{background:rgba(255,255,255,0.18);color:#fff;border:2px solid rgba(255,255,255,0.45);padding:8px 16px;border-radius:var(--radius-xs);font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.3px}
+.btn-hero:hover{background:rgba(255,255,255,0.32);transform:translateY(-1px)}
+.btn-hero.admin{background:var(--amarelo);color:var(--bordo);border-color:var(--amarelo)}
+.btn-hero.admin:hover{background:var(--amarelo-claro)}
+
+/* === MODAL ADMIN === */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.4)}
+.modal-header{background:linear-gradient(135deg,var(--bordo),var(--vermelho));color:#fff;padding:22px 28px;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1}
+.modal-header h2{font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:-0.3px}
+.modal-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;opacity:0.8;line-height:1;padding:0 4px}
+.modal-close:hover{opacity:1}
+.modal-body{padding:24px 28px}
+.modal-section{margin-bottom:26px}
+.modal-section h3{font-size:12px;font-weight:900;text-transform:uppercase;color:var(--bordo);margin-bottom:12px;letter-spacing:0.8px;border-bottom:2px solid #eee;padding-bottom:8px}
+.user-list{display:flex;flex-direction:column;gap:8px}
+.user-item{display:flex;align-items:center;gap:10px;padding:11px 14px;background:#f9f9f9;border-radius:10px;border:1px solid #eee}
+.ui-nome{font-weight:800;color:var(--bordo);min-width:110px}
+.ui-user{font-size:12px;color:#888;min-width:110px}
+.ui-lojas{font-size:12px;color:#555;flex:1}
+.btn-del{background:#f8d7da;color:#721c24;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;flex-shrink:0}
+.btn-del:hover{background:#f5c6cb}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-field label{display:block;font-size:11px;text-transform:uppercase;color:#777;font-weight:700;margin-bottom:4px;letter-spacing:0.4px}
+.form-field input{width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;outline:none}
+.form-field input:focus{border-color:var(--vermelho)}
+.lojas-check{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.loja-cb{display:flex;align-items:center;gap:6px;padding:7px 13px;border:2px solid #ddd;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.15s;background:#fff;user-select:none}
+.loja-cb.ativo{border-color:var(--vermelho);background:#fff0f0;color:var(--bordo)}
+.loja-cb input{accent-color:var(--vermelho);cursor:pointer}
+.btn-add{background:linear-gradient(135deg,var(--bordo),var(--vermelho));color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:900;font-size:14px;font-family:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px}
+.btn-add:hover{opacity:0.9}
+.btn-add:disabled{opacity:0.6;cursor:not-allowed}
+.admin-msg{margin-top:10px;font-size:13px;font-weight:700;display:none;padding:8px 12px;border-radius:6px}
+.admin-msg.ok{display:block;background:#d4edda;color:#155724}
+.admin-msg.err{display:block;background:#f8d7da;color:#721c24}
+</style>
+</head>
+<body>
+<!-- MODAL GERENCIAR USUÁRIOS -->
+<div class="modal-overlay" id="adminModal" onclick="if(event.target===this)fecharAdmin()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>⚙️ Gerenciar Usuários</h2>
+      <button class="modal-close" onclick="fecharAdmin()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h3>Usuários cadastrados</h3>
+        <div class="user-list" id="adminUserList"><div class="empty-state">Carregando...</div></div>
+      </div>
+      <div class="modal-section">
+        <h3>Cadastrar novo usuário</h3>
+        <div class="form-row">
+          <div class="form-field"><label>Usuário (login)</label><input type="text" id="nu_user" placeholder="ex: gerente.forte" autocomplete="off"></div>
+          <div class="form-field"><label>Nome para exibição</label><input type="text" id="nu_nome" placeholder="ex: Gerente Forte"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Senha (mín. 6 caracteres)</label><input type="password" id="nu_pass" placeholder="••••••••" autocomplete="new-password"></div>
+        </div>
+        <div class="form-field" style="margin-bottom:18px">
+          <label>Lojas com acesso</label>
+          <div class="lojas-check" id="nu_lojas"></div>
+        </div>
+        <button class="btn-add" id="btnCadastrar" onclick="cadastrarUsuario()">➕ Cadastrar Usuário</button>
+        <div class="admin-msg" id="adminMsg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="loadingOverlay" style="position:fixed;inset:0;background:rgba(255,255,255,0.97);z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="text-align:center">
+    <div style="font-size:64px">🌭</div>
+    <h2 style="color:#680505;margin:16px 0 8px;font-family:Arial;font-size:24px">Carregando dados...</h2>
+    <p style="color:#666;font-family:Arial;font-size:14px">Buscando respostas do Google Sheets</p>
+  </div>
+</div>
+<div class="container">
+
+<div class="hero">
+  <div class="hero-bar">
+    <div style="display:flex;align-items:center;gap:20px">
+            <div class="hero-titles">
+        <h1>VOZ DO <span>CLIENTE</span></h1>
+        <div class="sub">Dashboard Executivo Interativo · 2026</div>
+      </div>
+    </div>
+    <div class="hero-user">
+      <span class="user-nome" id="nomeUsuario"></span>
+      <button class="btn-hero admin" id="btnAdmin" onclick="abrirAdmin()" style="display:none">⚙️ Usuários</button>
+      <button class="btn-hero" onclick="logout()">↩ Sair</button>
+    </div>
+  </div>
+</div>
+
+<!-- FILTRO GLOBAL DE LOJAS (afeta todas as abas) -->
+<div class="loja-global-bar">
+  <span class="lg-label">🏪 Lojas</span>
+  <div class="loja-chips" id="lojaChips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+</div>
+
+<!-- NAVEGAÇÃO DE ABAS -->
+<div class="tab-nav">
+  <button class="tab-btn ativo" onclick="showTab('resumo',this)">📊 Resumo Geral</button>
+  <button class="tab-btn" onclick="showTab('satisfacao',this)">📋 Satisfação</button>
+  <button class="tab-btn" onclick="showTab('google',this)">🌟 Google Reviews</button>
+</div>
+
+<!-- ABA: RESUMO -->
+<div id="tab-resumo" class="tab-panel ativo">
+  <div class="section">
+    <h2><span class="emoji">📊</span>Resumo por Loja</h2>
+    <div class="h-sub">Visão consolidada dos indicadores: pesquisa de satisfação e Google Reviews.</div>
+    <div class="resumo-grid" id="resumoGrid"><div class="empty-state">Carregando dados...</div></div>
+  </div>
+</div>
+
+<!-- ABA: SATISFAÇÃO -->
+<div id="tab-satisfacao" class="tab-panel">
+
+<!-- FILTROS (pesquisa) -->
+<div class="filter-bar">
+  <h3>🔍 Filtros da Pesquisa <span class="badge" id="filterBadge">—</span></h3>
+  <div class="filter-row">
+    <div class="filter-group" style="max-width:160px">
+      <label>Mês inicial</label>
+      <select id="mesInicio">
+        <option value="2026-01" selected>Jan 2026</option>
+        <option value="2026-02">Fev 2026</option>
+        <option value="2026-03">Mar 2026</option>
+        <option value="2026-04">Abr 2026</option>
+        <option value="2026-05">Mai 2026</option>
+        <option value="2026-06">Jun 2026</option>
+        <option value="2026-07">Jul 2026</option>
+        <option value="2026-08">Ago 2026</option>
+        <option value="2026-09">Set 2026</option>
+        <option value="2026-10">Out 2026</option>
+        <option value="2026-11">Nov 2026</option>
+        <option value="2026-12">Dez 2026</option>
+      </select>
+    </div>
+    <div class="filter-group" style="max-width:160px">
+      <label>Mês final</label>
+      <select id="mesFim">
+        <option value="2026-01">Jan 2026</option>
+        <option value="2026-02">Fev 2026</option>
+        <option value="2026-03">Mar 2026</option>
+        <option value="2026-04">Abr 2026</option>
+        <option value="2026-05" selected>Mai 2026</option>
+        <option value="2026-06">Jun 2026</option>
+        <option value="2026-07">Jul 2026</option>
+        <option value="2026-08">Ago 2026</option>
+        <option value="2026-09">Set 2026</option>
+        <option value="2026-10">Out 2026</option>
+        <option value="2026-11">Nov 2026</option>
+        <option value="2026-12">Dez 2026</option>
+      </select>
+    </div>
+    <div class="filter-group" style="max-width:140px">
+      <label>Canal</label>
+      <select id="canalFiltro">
+        <option value="">Todos</option>
+        <option value="Delivery">Delivery</option>
+        <option value="Balcão">Balcão</option>
+      </select>
+    </div>
+    <div class="filter-group" style="max-width:140px">
+      <label>Pontuação</label>
+      <select id="notaFiltro">
+        <option value="">Todas</option>
+        <option value="3">Apenas Nota 3</option>
+        <option value="2">Apenas Nota 2</option>
+        <option value="1">Apenas Nota 1</option>
+        <option value="critica">Críticas (≤2)</option>
+      </select>
+    </div>
+    <button class="btn-reset" onclick="resetFilters()">↻ Limpar</button>
+  </div>
+  <div class="filter-info" id="filterInfo"></div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-grid">
+  <div class="kpi"><div class="label">Total de Feedbacks</div><div class="value" id="kpiTotal">—</div><div class="trend" id="kpiTotalSub">—</div></div>
+  <div class="kpi yellow"><div class="label">NPS Proxy</div><div class="value" id="kpiNps">—</div><div class="trend" id="kpiNpsSub">—</div></div>
+  <div class="kpi bordo"><div class="label">% Nota Máxima</div><div class="value" id="kpiPct3">—</div><div class="trend" id="kpiPct3Sub">—</div></div>
+  <div class="kpi blue"><div class="label">Pontuação Média</div><div class="value" id="kpiMedia">—</div><div class="trend">Escala 1-3</div></div>
+  <div class="kpi green"><div class="label">% Delivery</div><div class="value" id="kpiDelivery">—</div><div class="trend" id="kpiDeliverySub">—</div></div>
+  <div class="kpi"><div class="label">Críticas (≤2)</div><div class="value" id="kpiCriticas">—</div><div class="trend" id="kpiCriticasSub">—</div></div>
+</div>
+
+<!-- LOJA -->
+<div class="section">
+  <h2><span class="emoji">🏪</span>Performance por Loja</h2>
+  <div class="h-sub">Volume e nota média (1-3) — atualizado pelos filtros.</div>
+  <div class="grid-2">
+    <div class="chart-box"><h4>Volume de Feedback por Loja</h4><div class="chart-h-md"><canvas id="chartLojaVolume"></canvas></div></div>
+    <div class="chart-box"><h4>Nota Média por Loja</h4><div class="chart-h-md"><canvas id="chartLojaNota"></canvas></div></div>
+  </div>
+  <h3>📋 Tabela-Resumo por Loja</h3>
+  <table id="tabelaLojas"><thead><tr><th>Loja</th><th>Feedbacks</th><th>Nota Média</th><th>% Nota 3</th><th>Críticas</th><th>Status</th></tr></thead><tbody></tbody></table>
+</div>
+
+<!-- MÊS -->
+<div class="section">
+  <h2><span class="emoji">📅</span>Evolução Mensal</h2>
+  <div class="h-sub">Termômetro temporal — volume e qualidade.</div>
+  <div class="grid-2">
+    <div class="chart-box"><h4>Volume por Mês</h4><div class="chart-h-md"><canvas id="chartMesVolume"></canvas></div></div>
+    <div class="chart-box"><h4>Nota Média por Mês</h4><div class="chart-h-md"><canvas id="chartMesNota"></canvas></div></div>
+  </div>
+</div>
+
+<!-- DIMENSÕES -->
+<div class="section">
+  <h2><span class="emoji">🎯</span>Áreas para Melhorar</h2>
+  <div class="h-sub">Categorização semântica das observações abertas + dimensões de avaliação.</div>
+  <div class="grid-3">
+    <div class="chart-box"><h4>Distribuição de Categorias</h4><div class="chart-h-lg"><canvas id="chartCategorias"></canvas></div></div>
+    <div class="chart-box"><h4>Média por Dimensão</h4><div class="chart-h-lg"><canvas id="chartDimensoes"></canvas></div></div>
+  </div>
+  <h3>🔥 Ranking de Dores (categorias de crítica)</h3>
+  <div class="bar-list" id="dorList"></div>
+</div>
+
+<!-- ELOGIOS & RECLAMAÇÕES -->
+<div class="section">
+  <h2><span class="emoji">⭐</span>Elogios &amp; Reclamações</h2>
+  <div class="h-sub">5 comentários mais recentes de cada categoria — atualizado pelos filtros.</div>
+  <div class="grid-2">
+    <div>
+      <h3>👏 Elogios</h3>
+      <div class="scroll-table" style="max-height:340px">
+        <table id="tabelaElogios"><thead><tr><th>Data</th><th>Loja</th><th>Comentário</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div>
+      <h3>⚠️ Reclamações</h3>
+      <div class="scroll-table" style="max-height:340px">
+        <table id="tabelaReclamacoes"><thead><tr><th>Data</th><th>Loja</th><th>Nota</th><th>Comentário</th><th>Contato</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACKS DETALHADOS -->
+<div class="section">
+  <h2><span class="emoji">📝</span>Feedbacks Detalhados</h2>
+  <div class="h-sub">Lista completa filtrada — texto aberto dos clientes.</div>
+  <div class="scroll-table">
+    <table id="tabelaFeedbacks"><thead><tr><th>Data</th><th>Loja</th><th>Canal</th><th>Nota</th><th>Observação</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+</div><!-- fecha tab-satisfacao -->
+
+<!-- ABA: GOOGLE REVIEWS -->
+<div id="tab-google" class="tab-panel">
+  <div class="section" id="sectionGoogleReviews">
+    <h2><span class="emoji">🌟</span>Google Reviews</h2>
+    <div class="h-sub">Nota e avaliações mais recentes de cada loja no Google — atualizado a cada 6 horas automaticamente.</div>
+    <div id="googleReviewsContent"><div class="empty-state">Carregando avaliações do Google...</div></div>
+  </div>
+</div>
+
+<footer>Dashboard Voz do Cliente · Cachorro do Bigode · 2026</footer>
+
+</div>
+
+<script>
+// ============ ABAS ============
+function showTab(nome, btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('ativo'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('ativo'));
+  document.getElementById('tab-'+nome).classList.add('ativo');
+  if(btn) btn.classList.add('ativo');
+  if(nome==='satisfacao'){
+    setTimeout(()=>Object.values(charts).forEach(c=>c&&c.resize()),60);
+  }
+}
+
+// ============ RESUMO POR LOJA ============
+let googleReviewsData={};
+
+function renderResumo(){
+  const grid=document.getElementById('resumoGrid');
+  if(!LOJAS_ALL.length){grid.innerHTML='<div class="empty-state">Carregando...</div>';return;}
+
+  grid.innerHTML=LOJAS_ALL.map(loja=>{
+    const d=RAW.filter(r=>r.loja===loja&&r.nota>=1&&r.nota<=3);
+    const total=d.length;
+    const n3=d.filter(r=>r.nota===3).length;
+    const n1=d.filter(r=>r.nota===1).length;
+    const npsN=total?((n3-n1)*100/total):null;
+    const npsTxt=npsN===null?'—':(npsN>0?'+':'')+npsN.toFixed(1);
+    const npsCls=npsN===null?'':npsN>=50?'verde':npsN>=0?'amarelo':'verm';
+    const pct3=total?(n3*100/total).toFixed(1)+'%':'—';
+
+    const gd=googleReviewsData[loja];
+    const gRat=gd&&gd.rating!=null?gd.rating.toFixed(1):'—';
+    const gTot=gd&&gd.total?gd.total.toLocaleString('pt-BR')+' aval.':'';
+    const gStar=gd&&gd.rating?'★'.repeat(Math.round(gd.rating))+'☆'.repeat(5-Math.round(gd.rating)):'';
+
+    return `<div class="store-resumo">
+      <h3>${loja.replace('Loja ','')}</h3>
+
+      <div class="ind-bloco-title">📋 Pesquisa de Satisfação</div>
+      <div class="ind-row">
+        <span class="ind-label">NPS Proxy</span>
+        <span class="ind-val ${npsCls}">${npsTxt}</span>
+      </div>
+      <div class="ind-row">
+        <span class="ind-label">% Nota Máxima</span>
+        <span class="ind-val">${pct3}</span>
+      </div>
+      <div class="ind-row">
+        <span class="ind-label">Total Feedbacks</span>
+        <span class="ind-val">${total}</span>
+      </div>
+
+      <div class="ind-bloco-title">🌟 Google Reviews</div>
+      <div class="ind-row">
+        <span class="ind-label">Nota Google</span>
+        <div>
+          <span class="ind-val google-cor">${gRat}</span>
+          ${gStar?`<span style="color:#FBBC04;font-size:13px;display:block;text-align:right">${gStar}</span>`:''}
+          ${gTot?`<span class="ind-sub-val">${gTot}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============ CONFIG ============
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzkkIg1flbHFQWUqixBg1Ml28CeX7hx9TIXmQ1fbQtm9CL61jcGR7g9XQp3IsJid59Kg/exec';
+
+// ============ AUTH ============
+function getAuth(){try{return JSON.parse(sessionStorage.getItem('cdb_auth')||'null');}catch(e){return null;}}
+function logout(){sessionStorage.removeItem('cdb_auth');window.location.href='login.html';}
+
+function initUserBar(){
+  const auth=getAuth();
+  if(!auth)return;
+  document.getElementById('nomeUsuario').textContent='👤 '+(auth.nome||auth.user);
+  if(auth.role==='master') document.getElementById('btnAdmin').style.display='';
+}
+
+// ============ ADMIN PANEL ============
+function abrirAdmin(){
+  document.getElementById('adminModal').classList.add('open');
+  carregarUsuarios();
+  preencherLojasCheckboxes();
+}
+function fecharAdmin(){document.getElementById('adminModal').classList.remove('open');}
+
+async function carregarUsuarios(){
+  const auth=getAuth();
+  const lista=document.getElementById('adminUserList');
+  lista.innerHTML='<div class="empty-state">Carregando...</div>';
+  try{
+    if(APPS_SCRIPT_URL.includes('COLE_AQUI')){throw new Error('Configure a URL do Apps Script primeiro');}
+    const url=`${APPS_SCRIPT_URL}?action=listUsers&masterKey=${encodeURIComponent(auth.masterKey||'')}`;
+    const resp=await fetch(url);const data=await resp.json();
+    if(!data.ok||!data.users||!data.users.length){lista.innerHTML='<div class="empty-state">Nenhum usuário gerencial cadastrado ainda.</div>';return;}
+    lista.innerHTML='';
+    data.users.forEach(u=>{
+      const el=document.createElement('div');el.className='user-item';
+      el.innerHTML=`<span class="ui-nome">${u.nome||u.username}</span><span class="ui-user">@${u.username}</span><span class="ui-lojas">${u.lojas}</span><button class="btn-del" onclick="excluirUsuario('${u.username}',this)">Excluir</button>`;
+      lista.appendChild(el);
+    });
+  }catch(e){lista.innerHTML=`<div class="empty-state" style="color:#721c24">Erro: ${e.message}</div>`;}
+}
+
+function preencherLojasCheckboxes(){
+  const cont=document.getElementById('nu_lojas');cont.innerHTML='';
+  const todas=LOJAS_ALL.length?LOJAS_ALL:['Loja Forte','Loja Sertorio','Loja Zona Sul','Loja Galeria'];
+  todas.forEach(loja=>{
+    const label=document.createElement('label');
+    label.className='loja-cb';
+    const cb=document.createElement('input');cb.type='checkbox';cb.value=loja;
+    cb.addEventListener('change',()=>label.classList.toggle('ativo',cb.checked));
+    label.appendChild(cb);label.appendChild(document.createTextNode(' '+loja.replace('Loja ','')));
+    cont.appendChild(label);
+  });
+}
+
+async function cadastrarUsuario(){
+  const auth=getAuth();
+  const user=document.getElementById('nu_user').value.trim();
+  const nome=document.getElementById('nu_nome').value.trim();
+  const pass=document.getElementById('nu_pass').value.trim();
+  const lojas=[...document.querySelectorAll('#nu_lojas input:checked')].map(cb=>cb.value).join(',');
+  const msg=document.getElementById('adminMsg');msg.className='admin-msg';
+  if(!user||!pass||!lojas){msg.textContent='Preencha usuário, senha e selecione ao menos uma loja.';msg.className='admin-msg err';return;}
+  if(pass.length<6){msg.textContent='Senha deve ter mínimo 6 caracteres.';msg.className='admin-msg err';return;}
+  const btn=document.getElementById('btnCadastrar');btn.disabled=true;
+  try{
+    if(APPS_SCRIPT_URL.includes('COLE_AQUI')){throw new Error('Configure a URL do Apps Script primeiro');}
+    const url=`${APPS_SCRIPT_URL}?action=addUser&masterKey=${encodeURIComponent(auth.masterKey||'')}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}&nome=${encodeURIComponent(nome||user)}&lojas=${encodeURIComponent(lojas)}`;
+    const resp=await fetch(url);const data=await resp.json();
+    if(data.ok){
+      msg.textContent='✅ '+data.msg;msg.className='admin-msg ok';
+      document.getElementById('nu_user').value='';document.getElementById('nu_nome').value='';document.getElementById('nu_pass').value='';
+      document.querySelectorAll('#nu_lojas input').forEach(cb=>{cb.checked=false;cb.closest('.loja-cb').classList.remove('ativo');});
+      carregarUsuarios();
+    }else{msg.textContent='❌ '+(data.msg||'Erro ao cadastrar');msg.className='admin-msg err';}
+  }catch(e){msg.textContent='❌ Erro: '+e.message;msg.className='admin-msg err';}
+  finally{btn.disabled=false;}
+}
+
+async function excluirUsuario(username,btn){
+  if(!confirm(`Excluir o usuário "${username}"?`))return;
+  const auth=getAuth();btn.disabled=true;
+  try{
+    const url=`${APPS_SCRIPT_URL}?action=deleteUser&masterKey=${encodeURIComponent(auth.masterKey||'')}&username=${encodeURIComponent(username)}`;
+    const resp=await fetch(url);const data=await resp.json();
+    if(data.ok){carregarUsuarios();}else{alert(data.msg||'Erro ao excluir');}
+  }catch(e){alert('Erro de conexão');}
+  finally{btn.disabled=false;}
+}
+
+const C={vermelho:'#C42018',amarelo:'#FEC83C',bordo:'#680505',vermelhoSuave:'#E0473A',azul:'#73C6EF',verde:'#27ae60',laranja:'#E16428'};
+Chart.defaults.font.family="'Owners', 'Helvetica', sans-serif";
+Chart.defaults.color='#5a4a3a';
+
+// ========== DADOS CARREGADOS DO GOOGLE SHEETS ==========
+let RAW = [
+{loja:"Loja Forte",data:"17/03/2026",mes:"2026-03",melhoria:"Equipe muito boa!",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Forte",data:"19/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"19/03/2026",mes:"2026-03",melhoria:"Sem feedback de melhoria pq de fato estava sensacional",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"19/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"19/03/2026",mes:"2026-03",melhoria:"A salsicha de grao de bico era muito menor que o tamanho de uma salsicha \"normal\" nao acompanhava o tamanho do pão.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:2,temp:3},
+{loja:"Loja Forte",data:"19/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"19/03/2026",mes:"2026-03",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:2,qual:3,temp:null},
+{loja:"Loja Forte",data:"21/03/2026",mes:"2026-03",melhoria:"Melhorar o tempo de espera, e os lanches não foram da maneira que pedimos e ainda chegou frio..",canal:"Delivery",nota:1,tempo:1,servico:1,qual:1,temp:1},
+{loja:"Loja Forte",data:"23/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:1,tempo:1,servico:1,qual:1,temp:1},
+{loja:"Loja Forte",data:"23/03/2026",mes:"2026-03",melhoria:"Na entrega no horário",canal:"Delivery",nota:2,tempo:2,servico:2,qual:2,temp:3},
+{loja:"Loja Forte",data:"24/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"24/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"26/03/2026",mes:"2026-03",melhoria:"Ter mais atenção nas observações sempre peço ketchup e nunca mandaram",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"26/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"27/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:2,tempo:2,servico:2,qual:2,temp:2},
+{loja:"Loja Forte",data:"31/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"31/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"31/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"30/03/2026",mes:"2026-04",melhoria:"Ótimo atendimento e excelente qualidade, continue assim",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"02/04/2026",mes:"2026-04",melhoria:"nada",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"02/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"04/04/0026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"04/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"04/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"04/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"04/04/2026",mes:"2026-04",melhoria:"Mais queijo ralado",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"04/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Galeria",data:"17/03/0026",mes:"2026-03",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"17/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"17/03/2026",mes:"2026-03",melhoria:"Poderia ser mais rapido, pois é bem perto",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Sertorio",data:"18/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"19/03/2026",mes:"2026-03",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"19/03/2026",mes:"2026-03",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"15/04/1964",mes:"2026-03",melhoria:"Tudo perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"20/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"20/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"20/03/2026",mes:"2026-03",melhoria:"O tempo de espera é de entrega",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"20/03/2026",mes:"2026-03",melhoria:"Poderia ter promoção de 3, 4 lanches e sem refrigerante, pois aqui em casa não tomamos refrigerante",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"21/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"21/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"21/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"21/03/2026",mes:"2026-03",melhoria:"Infelizmente o bigodinho veio com o tomate passado, com um gosto um pouco desagradável, então recomendaria mais atenção na preparação do lanche.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:2,temp:3},
+{loja:"Loja Sertorio",data:"22/03/2026",mes:"2026-03",melhoria:"Temperatura",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Sertorio",data:"22/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"23/03/2026",mes:"2026-03",melhoria:"No momento nada",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"23/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"23/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"23/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"22/05/2004",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"25/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"26/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"26/03/2026",mes:"2026-03",melhoria:"Tá muito bom",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"27/03/2026",mes:"2026-03",melhoria:"Revisar o pedido antes de enviar para vir conforme solicitado",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"28/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"28/03/2026",mes:"2026-03",melhoria:"Excelente o app de rastreio",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"28/03/2026",mes:"2026-03",melhoria:"Perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"29/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:2,tempo:3,servico:3,qual:2,temp:1},
+{loja:"Loja Sertorio",data:"31/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:1,tempo:1,servico:1,qual:1,temp:1},
+{loja:"Loja Sertorio",data:"31/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:2,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"31/03/2026",mes:"2026-03",melhoria:"Achei que está melhor",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"01/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"01/04/2026",mes:"2026-04",melhoria:"Maravilhoso compro sempre 1 vez por mes pelo menos ótimo atendimento Sertorio funcionario parabéns",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"01/04/2026",mes:"2026-04",melhoria:"Nada está tudo maravilhoso como sempre",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"02/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"01/04/2026",mes:"2026-04",melhoria:"Tudo maravilhoso",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"02/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"03/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"04/04/2026",mes:"2026-04",melhoria:"Tempo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"04/04/2026",mes:"2026-04",melhoria:"Esta entrega foi rápida, mas todas as anteriores foram muito demoradas.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"05/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"25/03/2026",mes:"2026-03",melhoria:"Nd",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"27/03/2026",mes:"2026-03",melhoria:"O local era longe, talvez por isso os ingredientes não vieram novos. Batata mole e nem deu para sentir a crocancia",canal:"Delivery",nota:1,tempo:3,servico:3,qual:2,temp:1},
+{loja:"Loja Zona Sul",data:"28/03/2026",mes:"2026-03",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Zona Sul",data:"29/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"30/03/2026",mes:"2026-03",melhoria:"ter opções 2 linguiça no cachorro",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"31/03/2026",mes:"2026-03",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Zona Sul",data:"27/03/2026",mes:"2026-04",melhoria:"Atender pelo whatsapp",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"29/03/2026",mes:"2026-04",melhoria:"ta bom",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"04/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"04/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"03/04/2026",mes:"2026-04",melhoria:"Tempo de entrega",canal:"Delivery",nota:2,tempo:3,servico:2,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"06/04/2026",mes:"2026-04",melhoria:"Nada. Está maravilhoso!",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"06/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"06/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"06/04/2026",mes:"2026-04",melhoria:"Justifico a resposta: retorno breve ao cliente qdo algo sai fora do esperado.",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"06/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"07/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"07/04/2026",mes:"2026-04",melhoria:"Tive a impressão de que o pão diminuiu o tamanho. Pois estou acostumada a pedir com vocês.",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Zona Sul",data:"07/04/2026",mes:"2026-04",melhoria:"Tempo kkk",canal:"Delivery",nota:2,tempo:2,servico:2,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"07/04/2026",mes:"2026-04",melhoria:"Tempo de entrega em lugares próximos a loja",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"20/03/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"08/04/2026",mes:"2026-04",melhoria:"Em Cher mais o lanche kkkk",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"08/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"02/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"02/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"08/04/2026",mes:"2026-04",melhoria:"Nada para melhorar, tudo perfeito 🤤",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"02/08/1971",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"09/04/2026",mes:"2026-04",melhoria:"Temperatura",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Zona Sul",data:"09/04/2026",mes:"2026-04",melhoria:"Estava ótimo como sempre",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"09/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"10/04/0026",mes:"2026-04",melhoria:"Tudo ótimo!",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"10/04/2026",mes:"2026-04",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Zona Sul",data:"06/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"10/04/2026",mes:"2026-04",melhoria:"nabel",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"30/03/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"10/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"10/04/2026",mes:"2026-04",melhoria:"Entrega",canal:"Delivery",nota:2,tempo:1,servico:2,qual:2,temp:1},
+{loja:"Loja Zona Sul",data:"10/04/2026",mes:"2026-04",melhoria:"Taxa de entrega muito alta",canal:"Delivery",nota:2,tempo:3,servico:2,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"10/04/2026",mes:"2026-04",melhoria:"Pra mim tá ótimo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"10/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"04/04/2026",mes:"2026-04",melhoria:"Tudo otimo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"10/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Sertorio",data:"18/03/2026",mes:"2026-04",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"11/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"11/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"11/04/0026",mes:"2026-04",melhoria:"Tudo perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"11/04/2026",mes:"2026-04",melhoria:"Mais uma vez pedi 2 cachorros quente iguais sem molho, sem tomate, sem tempero verde e sem queijo ralado... mais uma vez veio com molho que eu não posso consumir! Por sorte o outro cachorro quente estava correto e pude trocar com minha mãe!",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"11/04/2026",mes:"2026-04",melhoria:"Não informar que o pedido foi entregue, quando não foi",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"11/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"11/04/2026",mes:"2026-04",melhoria:"Tempo de entrega, lanche chegou frio.",canal:"Delivery",nota:2,tempo:2,servico:2,qual:2,temp:1},
+{loja:"Loja Forte",data:"11/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"11/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:2,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"11/04/2026",mes:"2026-04",melhoria:"Sou do bairro Santo Antônio, acredito que tem um estabelecimento maís perto para receber meu pedido,, assim não chegando frio o lanche.",canal:"Delivery",nota:1,tempo:1,servico:2,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"09/04/2026",mes:"2026-04",melhoria:"Nada, tá perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"30/03/2026",mes:"2026-04",melhoria:"Nada",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"13/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"13/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"13/04/2026",mes:"2026-04",melhoria:"Cebola picada em menor pedaço",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"13/04/2026",mes:"2026-04",melhoria:"Menos sal na salsicha",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"14/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"14/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"12/03/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"12/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"20/03/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"15/04/2026",mes:"2026-04",melhoria:"eu gostei, só achei que os petiscos podiam ser mais temperados.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"09/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"10/03/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"16/04/2026",mes:"2026-04",melhoria:"Muito gostoso 😋 o cachorro, gostamos muito.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"13/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Sertorio",data:"04/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"16/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"09/04/2026",mes:"2026-04",melhoria:"Tempo",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Sertorio",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:1,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"30/03/2026",mes:"2026-04",melhoria:"Horário",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"17/04/2026",mes:"2026-04",melhoria:".",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"17/04/0026",mes:"2026-04",melhoria:"Fazer pedido pelo whats",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"17/04/2026",mes:"2026-04",melhoria:"Tudo top",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"11/04/2026",mes:"2026-04",melhoria:"Abrindo uma filial no menino Deus",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"11/04/2026",mes:"2026-04",melhoria:"Abrindo uma filial menino Deus",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"18/04/2026",mes:"2026-04",melhoria:"Tudo otimo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"18/04/2026",mes:"2026-04",melhoria:"Sim",canal:"Delivery",nota:2,tempo:2,servico:2,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"18/04/2026",mes:"2026-04",melhoria:"Batata palha veio mucho e pouca maionese, mas está bem gostoso o lanche",canal:"Delivery",nota:2,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"18/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:2,tempo:3,servico:2,qual:2,temp:2},
+{loja:"Loja Zona Sul",data:"18/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"18/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"19/04/2026",mes:"2026-04",melhoria:"Ótima empresa.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"17/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"19/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:2,tempo:3,servico:2,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"19/04/2026",mes:"2026-04",melhoria:"Embalagem foi feito pedido do cachorro filhote e veio amassado embalagem muito pequena",canal:"Delivery",nota:2,tempo:3,servico:3,qual:2,temp:2},
+{loja:"Loja Forte",data:"19/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"19/04/2026",mes:"2026-04",melhoria:"Melhora um pouco mais na montagem do cachorro quente",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"19/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"10/04/0026",mes:"2026-04",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"19/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"19/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:1,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"20/04/2026",mes:"2026-04",melhoria:"A temperatura",canal:"Delivery",nota:2,tempo:2,servico:2,qual:2,temp:2},
+{loja:"Loja Forte",data:"20/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"20/04/2026",mes:"2026-04",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Forte",data:"20/04/2026",mes:"2026-04",melhoria:"Determinar um horário mais preciso de entrega . um sistema que poderia acompanhar que funcionasse",canal:"Delivery",nota:1,tempo:1,servico:2,qual:1,temp:1},
+{loja:"Loja Sertorio",data:"02/04/2026",mes:"2026-04",melhoria:"Sou apaixonada pelo cachorro quente do bigode! Nada a opinar quanto a melhorias!",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"21/04/2026",mes:"2026-04",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:2,qual:3,temp:null},
+{loja:"Loja Forte",data:"21/04/2026",mes:"2026-04",melhoria:"Ter atendimento no WhatsApp tbm",canal:"Delivery",nota:1,tempo:2,servico:2,qual:1,temp:1},
+{loja:"Loja Sertorio",data:"30/03/2026",mes:"2026-04",melhoria:"Nada (ericacibele1411@gmail.com",canal:"",nota:3,tempo:null,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"21/04/2026",mes:"2026-04",melhoria:"Achei o pão meio passado",canal:"Delivery",nota:2,tempo:3,servico:3,qual:2,temp:3},
+{loja:"Loja Forte",data:"21/04/2026",mes:"2026-04",melhoria:"Voltar na receita original seria o necessário . Hj provavelmente deve ter sido a ultima vez que peço. O cachorro quente nao tem mais sabor…parece que pedi de outro lugar infelizmente…maionese zero sabor, pouquíssima cebola, queijo ralado…pedaços enormes de ovo…tudo diferente e sem sabor",canal:"Delivery",nota:3,tempo:3,servico:3,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"21/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"22/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"22/04/2026",mes:"2026-04",melhoria:"Sempre perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"22/04/2026",mes:"2026-04",melhoria:"O tamanho do lanche, paguei mais caro, e pensava que o lanche era maior. Mas, de resto, sabor e qualidades incríveis e impecáveis",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Forte",data:"23/04/2026",mes:"2026-04",melhoria:"Esqueceram de enviar os sachês Ketchup somente",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"22/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"17/04/2026",mes:"2026-04",melhoria:"voltar a entrega na zona sul hípica",canal:"Delivery",nota:3,tempo:2,servico:2,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"23/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"23/04/2026",mes:"2026-04",melhoria:"Manter sempre o mesmo padrão",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"23/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"23/04/2026",mes:"2026-04",melhoria:"O delivery pode demorar menos",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"24/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"24/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"24/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"24/04/2026",mes:"2026-04",melhoria:"Continuem assim",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"19/04/2026",mes:"2026-04",melhoria:"Está tudo certo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"24/04/2026",mes:"2026-04",melhoria:"Paguei com coca junto e veio só os cachorros",canal:"Delivery",nota:1,tempo:2,servico:1,qual:1,temp:3},
+{loja:"Loja Sertorio",data:"10/04/2025",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"24/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:2,tempo:2,servico:3,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"24/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"24/04/2026",mes:"2026-04",melhoria:"Mais agilidade na entrega para o lanche não chegar frio",canal:"Delivery",nota:2,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Zona Sul",data:"24/04/0026",mes:"2026-04",melhoria:"Tempo, muito demorado. Entrega próxima",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"24/04/2026",mes:"2026-04",melhoria:"Continua assim",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"25/04/2026",mes:"2026-04",melhoria:"Está tudo perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"25/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"25/04/2026",mes:"2026-04",melhoria:"Olhando bem o pedido e não esquecer de colocar o que foi pedido",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"18/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"25/04/2026",mes:"2026-04",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Forte",data:"25/04/2026",mes:"2026-04",melhoria:"Lanche poderia estar um pouquinho mais quente",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"25/04/2026",mes:"2026-04",melhoria:"O link de rastreio não funciona",canal:"Delivery",nota:1,tempo:1,servico:1,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"25/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"25/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"25/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"26/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"26/04/2026",mes:"2026-04",melhoria:"Nao.chegou o refrigerante e nao me responderam",canal:"Delivery",nota:2,tempo:3,servico:1,qual:2,temp:2},
+{loja:"Loja Sertorio",data:"26/04/2026",mes:"2026-04",melhoria:"Poderia chegar quente .",canal:"Delivery",nota:2,tempo:2,servico:3,qual:2,temp:1},
+{loja:"Loja Sertorio",data:"26/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"27/04/2026",mes:"2026-04",melhoria:"Tudo ótimo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"27/04/2026",mes:"2026-04",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"28/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"28/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"28/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"28/04/0026",mes:"2026-04",melhoria:"muito bom",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"28/04/2026",mes:"2026-04",melhoria:"A maionese estava com textura fina .",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"29/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"29/04/2026",mes:"2026-04",melhoria:"Ultimamente os lanches estão vindo seco e pouca maionese",canal:"Delivery",nota:2,tempo:3,servico:3,qual:1,temp:3},
+{loja:"Loja Sertorio",data:"15/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"29/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"29/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"29/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"30/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:2,temp:3},
+{loja:"Loja Forte",data:"30/04/2026",mes:"2026-04",melhoria:"Ótimo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"30/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"24/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"30/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"30/04/2026",mes:"2026-04",melhoria:"Eu gosto",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"30/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"30/04/2026",mes:"2026-04",melhoria:"Por está tudo perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"30/04/2026",mes:"2026-04",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"25/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"25/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"01/05/2026",mes:"2026-05",melhoria:"Muito bom, por agora nenhuma sugestão",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"01/04/2026",mes:"2026-05",melhoria:"Nada tudo bom",canal:"Delivery",nota:2,tempo:3,servico:3,qual:2,temp:3},
+{loja:"Loja Forte",data:"01/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"21/04/2026",mes:"2026-05",melhoria:"Em nada, tá tudo ótimo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"01/05/2026",mes:"2026-05",melhoria:"Estava tudo ótimo continuem com o excelente trabalho!",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"01/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"01/05/2026",mes:"2026-05",melhoria:"A batata palha chegou mole",canal:"Delivery",nota:3,tempo:3,servico:3,qual:2,temp:3},
+{loja:"Loja Forte",data:"01/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"01/05/2026",mes:"2026-05",melhoria:"Lanche melhor apresentado, e temperatura mais alta",canal:"Delivery",nota:2,tempo:2,servico:2,qual:2,temp:1},
+{loja:"Loja Forte",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"29/04/2026",mes:"2026-05",melhoria:"Tudo ótimo,mas o vira lata poderia vir con mais maionese",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"02/05/2026",mes:"2026-05",melhoria:"Esqueceram o refrigerante, tivemos que esperar um tempão pra comer, pois foram buscar, só que queremos comer o lanche COM O REFRI, então estamos com o lanche aqui já há um tempo esperando… PRECISA ser revisado todo o pedido antes de sair, é algo super simples e evita toda essa espera e insatisfação!",canal:"Delivery",nota:1,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:2,tempo:2,servico:2,qual:1,temp:1},
+{loja:"Loja Zona Sul",data:"23/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"11/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"11/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"09/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:2,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"02/05/2026",mes:"2026-05",melhoria:"A tele entrega de vocês é péssima",canal:"Delivery",nota:1,tempo:1,servico:3,qual:1,temp:1},
+{loja:"Loja Forte",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"17/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"03/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"03/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"03/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"04/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"04/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"04/05/2026",mes:"2026-05",melhoria:"Nada! Atendimento super rápido, entrega mais veloz ainda e produtos com qualidade surpreendente.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"04/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"05/05/2026",mes:"2026-05",melhoria:"O app do pedido",canal:"Delivery",nota:3,tempo:3,servico:2,qual:3,temp:3},
+{loja:"Loja Forte",data:"05/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"20/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"05/05/2026",mes:"2026-05",melhoria:"O tempero",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"06/05/2026",mes:"2026-05",melhoria:"Em nada",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"05/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"24/04/2026",mes:"2026-05",melhoria:"Rapidez",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"06/05/2026",mes:"2026-05",melhoria:"Atendimento ágil, entrega antes do tempo e o cachorro chegou em perfeito estado. Bom tamanho e sabor excelente.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"06/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"06/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"02/05/2026",mes:"2026-05",melhoria:"Não tenho nada para reclamar",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"02/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"29/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"07/05/2026",mes:"2026-05",melhoria:"Tudo maravilhoso",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"07/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:2,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"07/05/2026",mes:"2026-05",melhoria:"",canal:"Balcão",nota:2,tempo:2,servico:2,qual:3,temp:null},
+{loja:"Loja Forte",data:"07/05/2026",mes:"2026-05",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Zona Sul",data:"07/05/2026",mes:"2026-05",melhoria:"Perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"07/05/2026",mes:"2026-05",melhoria:"nada",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"27/05/2026",mes:"2026-05",melhoria:"Ler local da entrega",canal:"Delivery",nota:2,tempo:2,servico:1,qual:3,temp:2},
+{loja:"Loja Sertorio",data:"07/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"06/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"07/05/2026",mes:"2026-05",melhoria:"Excelente atendimento, entrega super rápida.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"07/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"07/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"08/05/2026",mes:"2026-05",melhoria:"Tempo de entrega",canal:"Delivery",nota:1,tempo:1,servico:2,qual:2,temp:3},
+{loja:"Loja Sertorio",data:"08/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"08/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"08/05/2026",mes:"2026-05",melhoria:"NADA,estava tudo maravilhoso como sempre.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"08/05/2026",mes:"2026-05",melhoria:"Um dos produtos veio em desacordo com o solicitado, constando de um ingrediente que eu havia solicitado a retirada e com a ausência de outro que eu não havia solicitado retirar, o que afetou a experiência. Entendo que equívocos possam ocorrem na montagem dos lanches, mas peço com certa regularidade e já é a terceira oportunidade onde o lanche vem com algum problema. A temperatura desta vez também não era a ideal.",canal:"Delivery",nota:2,tempo:3,servico:3,qual:2,temp:2},
+{loja:"Loja Zona Sul",data:"09/05/2026",mes:"2026-05",melhoria:"MUITO bom o cachorro com carne de panela, o Brookie tbm uma delícia. Obrigada!",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"29/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"09/05/2026",mes:"2026-05",melhoria:"Que chegasse mais quentinho.",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Forte",data:"09/05/2026",mes:"2026-05",melhoria:"É um absurdo esperar 1 hora depois que apareceu no site que o motoboy saiu para a entrega quando não leva 15 minutos do local da loja até minha casa. Isso está sempre acontecendo. Acredito que o lanche fica pronto mas não é encaminhado para entrega",canal:"Delivery",nota:1,tempo:1,servico:1,qual:3,temp:2},
+{loja:"Loja Forte",data:"09/05/2026",mes:"2026-05",melhoria:"Lanche frio",canal:"Delivery",nota:3,tempo:2,servico:3,qual:2,temp:1},
+{loja:"Loja Sertorio",data:"09/05/2026",mes:"2026-05",melhoria:"Acho que pode melhorar na questão de ligação, pois estava tentando fazer o pedido por chamada e não consegui. Consegui só pelo whatsapp de vocês que foi encaminhado pra delivery. Fora isso tudo perfeito.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"01/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"03/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"10/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"10/05/2026",mes:"2026-05",melhoria:"Atenção as opções do cliente",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"10/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"10/05/2026",mes:"2026-05",melhoria:"Atenção aos ingredientes e qualidades dos mesmos!",canal:"Delivery",nota:1,tempo:3,servico:3,qual:1,temp:1},
+{loja:"Loja Zona Sul",data:"11/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"11/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"12/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"12/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:2,temp:1},
+{loja:"Loja Forte",data:"12/05/2026",mes:"2026-05",melhoria:"tudo ótimo",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"13/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"13/05/2026",mes:"2026-05",melhoria:"Foi perfeito",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"10/05/2026",mes:"2026-05",melhoria:"Acho que as unicas coisa que não gostei é que não dava para morder direito, mas acho que nao tem como melhorar isso e que a batata palha estava murcha ao chegar na minha casa, mas também duvido que tenha como melhorar isso, fora isso tudo foi ótimo.",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:1},
+{loja:"Loja Forte",data:"10/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:2,tempo:3,servico:3,qual:3,temp:1},
+{loja:"Loja Zona Sul",data:"11/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:2,tempo:1,servico:2,qual:3,temp:2},
+{loja:"Loja Zona Sul",data:"07/05/2026",mes:"2026-05",melhoria:"Excelente.",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"13/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"13/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"13/05/2026",mes:"2026-05",melhoria:"Nada",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Forte",data:"14/12/1988",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Zona Sul",data:"14/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"14/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"11/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:2},
+{loja:"Loja Sertorio",data:"15/05/2026",mes:"2026-05",melhoria:"Pedido estava perto e demorou a chega e estava muito 🧊",canal:"Delivery",nota:2,tempo:3,servico:3,qual:1,temp:1},
+{loja:"Loja Forte",data:"15/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"13/04/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Forte",data:"15/05/2026",mes:"2026-05",melhoria:"Tudo maravilhoso",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"15/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"15/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"21/04/2026",mes:"2026-05",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"21/04/2026",mes:"2026-05",melhoria:"",canal:"Balcão",nota:3,tempo:3,servico:3,qual:3,temp:null},
+{loja:"Loja Sertorio",data:"06/05/2026",mes:"2026-05",melhoria:"Pra mim tudo perfeito sempreee",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"06/05/2026",mes:"2026-05",melhoria:"Pra mim tudo perfeito sempreee",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"15/05/2026",mes:"2026-05",melhoria:"",canal:"Delivery",nota:3,tempo:2,servico:3,qual:3,temp:2},
+{loja:"Loja Zona Sul",data:"16/05/2026",mes:"2026-05",melhoria:"Sempre maravilhoso , qualidade impecável ❤️",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3},
+{loja:"Loja Sertorio",data:"16/05/2026",mes:"2026-05",melhoria:"Em nada, o trabalho já é excelente",canal:"Delivery",nota:3,tempo:3,servico:3,qual:3,temp:3}
+];
+
+// ============ ESTADO ============
+let LOJAS_ALL = [...new Set(RAW.map(r=>r.loja))].sort();
+let lojasAtivas = new Set(LOJAS_ALL);
+let charts = {};
+
+// ============ FILTROS UI ============
+function buildLojaChips(){
+  const cont = document.getElementById('lojaChips');
+  cont.innerHTML = '';
+  LOJAS_ALL.forEach(l=>{
+    const chip = document.createElement('div');
+    chip.className = 'loja-chip active';
+    chip.textContent = l.replace('Loja ','');
+    chip.onclick = ()=>{
+      if(lojasAtivas.has(l)){lojasAtivas.delete(l);chip.classList.remove('active');}
+      else{lojasAtivas.add(l);chip.classList.add('active');}
+      render();
+      renderResumo();
+      if(window.cachedGoogleReviews) renderGoogleReviews(window.cachedGoogleReviews);
+    };
+    cont.appendChild(chip);
+  });
+}
+
+function resetFilters(){
+  lojasAtivas = new Set(LOJAS_ALL);
+  document.querySelectorAll('.loja-chip').forEach(c=>c.classList.add('active'));
+  document.getElementById('mesInicio').value='2026-01';
+  document.getElementById('mesFim').value='2026-05';
+  document.getElementById('canalFiltro').value='';
+  document.getElementById('notaFiltro').value='';
+  render();
+  renderResumo();
+  if(window.cachedGoogleReviews) renderGoogleReviews(window.cachedGoogleReviews);
+}
+
+// ============ FILTRAGEM ============
+function getFiltered(){
+  const mi = document.getElementById('mesInicio').value;
+  const mf = document.getElementById('mesFim').value;
+  const can = document.getElementById('canalFiltro').value;
+  const nf = document.getElementById('notaFiltro').value;
+  return RAW.filter(r=>{
+    if(!lojasAtivas.has(r.loja)) return false;
+    if(r.mes < mi || r.mes > mf) return false;
+    if(can && r.canal !== can) return false;
+    if(nf){
+      if(nf === 'critica' && (!r.nota || r.nota > 2)) return false;
+      else if(nf !== 'critica' && r.nota != parseInt(nf)) return false;
+    }
+    return true;
+  });
+}
+
+// ============ KPIs ============
+function calcKpis(data){
+  const total = data.length;
+  const comNota = data.filter(d=>d.nota && d.nota>=1 && d.nota<=3);
+  const notaMedia = comNota.length ? (comNota.reduce((s,d)=>s+d.nota,0)/comNota.length).toFixed(2) : '—';
+  const n3 = comNota.filter(d=>d.nota===3).length;
+  const n2 = comNota.filter(d=>d.nota===2).length;
+  const n1 = comNota.filter(d=>d.nota===1).length;
+  const pct3 = comNota.length ? (n3*100/comNota.length).toFixed(1)+'%' : '—';
+  const nps = comNota.length ? ((n3-n1)*100/comNota.length).toFixed(1) : '—';
+  const delivery = data.filter(d=>d.canal==='Delivery').length;
+  const balcao = data.filter(d=>d.canal==='Balcão').length;
+  const pctDel = (delivery+balcao) ? (delivery*100/(delivery+balcao)).toFixed(0)+'%' : '—';
+  const criticas = comNota.filter(d=>d.nota<=2).length;
+  const pctCrit = comNota.length ? (criticas*100/comNota.length).toFixed(1)+'%' : '—';
+  return {total,notaMedia,pct3,nps,pctDel,criticas,pctCrit,delivery,balcao,n3,n2,n1};
+}
+
+function renderKpis(k){
+  document.getElementById('kpiTotal').textContent = k.total;
+  document.getElementById('kpiTotalSub').textContent = `${k.delivery} delivery · ${k.balcao} balcão`;
+  document.getElementById('kpiNps').textContent = k.nps==='—'?'—':'+'+k.nps;
+  document.getElementById('kpiNpsSub').textContent = k.n1+k.n3>0 ? `${k.n3} prom. · ${k.n1} det.` : '—';
+  document.getElementById('kpiPct3').textContent = k.pct3;
+  document.getElementById('kpiPct3Sub').textContent = `${k.n3} de ${k.n3+k.n2+k.n1} avaliações`;
+  document.getElementById('kpiMedia').textContent = k.notaMedia;
+  document.getElementById('kpiDelivery').textContent = k.pctDel;
+  document.getElementById('kpiDeliverySub').textContent = `${k.delivery} entregas`;
+  document.getElementById('kpiCriticas').textContent = k.criticas;
+  document.getElementById('kpiCriticasSub').textContent = k.pctCrit + ' do total avaliado';
+}
+
+// ============ CHARTS ============
+function destroyCharts(){
+  Object.values(charts).forEach(c=>c&&c.destroy());
+  charts = {};
+}
+
+function renderChartLojas(data){
+  const grupos = {};
+  data.forEach(d=>{
+    if(!grupos[d.loja]) grupos[d.loja]={total:0,notas:[]};
+    grupos[d.loja].total++;
+    if(d.nota && d.nota>=1 && d.nota<=3) grupos[d.loja].notas.push(d.nota);
+  });
+  const lojas = Object.keys(grupos).sort((a,b)=>grupos[b].total-grupos[a].total);
+  const vols = lojas.map(l=>grupos[l].total);
+  const notas = lojas.map(l=>grupos[l].notas.length ? +(grupos[l].notas.reduce((s,n)=>s+n,0)/grupos[l].notas.length).toFixed(2) : 0);
+  const labels = lojas.map(l=>l.replace('Loja ',''));
+
+  charts.lojaVol = new Chart(document.getElementById('chartLojaVolume'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'Feedbacks',data:vols,backgroundColor:[C.bordo,C.vermelho,C.vermelhoSuave,C.amarelo,C.amarelo,C.amarelo],borderRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eee'}}}}
+  });
+
+  charts.lojaNota = new Chart(document.getElementById('chartLojaNota'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'Nota média',data:notas,backgroundColor:notas.map(n=>n>=2.9?'#27ae60':n>=2.8?'#8bc34a':n>=2.5?C.amarelo:C.vermelho),borderRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:3.0,grid:{color:'#eee'}}}}
+  });
+
+  // tabela
+  const tbody = document.querySelector('#tabelaLojas tbody');
+  tbody.innerHTML = '';
+  if(lojas.length===0){tbody.innerHTML='<tr><td colspan="6" class="empty-state">Nenhuma loja no filtro</td></tr>';return;}
+  lojas.forEach(l=>{
+    const g = grupos[l];
+    const m = g.notas.length ? (g.notas.reduce((s,n)=>s+n,0)/g.notas.length).toFixed(2) : '—';
+    const n3pct = g.notas.length ? (g.notas.filter(n=>n===3).length*100/g.notas.length).toFixed(1)+'%' : '—';
+    const crit = g.notas.filter(n=>n<=2).length;
+    const critPct = g.notas.length ? (crit*100/g.notas.length).toFixed(1)+'%' : '—';
+    const status = m>=2.9 ? '<span class="pill pill-green">Verde</span>' : m>=2.8 ? '<span class="pill pill-yellow">Atenção</span>' : m==='—' ? '<span class="pill pill-gray">S/ nota</span>' : '<span class="pill pill-red">Crítico</span>';
+    const notaCls = m==='—' ? '' : m>=2.9 ? 'nota-3' : m>=2.5 ? 'nota-2' : 'nota-1';
+    tbody.innerHTML += `<tr><td><strong>${l.replace('Loja ','')}</strong></td><td>${g.total}</td><td class="${notaCls}">${m}</td><td>${n3pct}</td><td>${crit} (${critPct})</td><td>${status}</td></tr>`;
+  });
+}
+
+function renderChartMes(data){
+  const grupos = {};
+  data.forEach(d=>{
+    if(!grupos[d.mes]) grupos[d.mes]={total:0,notas:[]};
+    grupos[d.mes].total++;
+    if(d.nota && d.nota>=1 && d.nota<=3) grupos[d.mes].notas.push(d.nota);
+  });
+  const meses = Object.keys(grupos).sort();
+  const labels = meses.map(m=>{
+    const [y,mm] = m.split('-');
+    return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(mm)-1]+' '+y;
+  });
+  const vols = meses.map(m=>grupos[m].total);
+  const notas = meses.map(m=>grupos[m].notas.length ? +(grupos[m].notas.reduce((s,n)=>s+n,0)/grupos[m].notas.length).toFixed(2) : null);
+
+  charts.mesVol = new Chart(document.getElementById('chartMesVolume'),{
+    type:'line',
+    data:{labels,datasets:[{label:'Feedbacks',data:vols,borderColor:C.vermelho,backgroundColor:'rgba(204,0,0,0.2)',fill:true,tension:0.4,pointBackgroundColor:C.amarelo,pointBorderColor:C.bordo,pointBorderWidth:3,pointRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eee'}}}}
+  });
+  charts.mesNota = new Chart(document.getElementById('chartMesNota'),{
+    type:'line',
+    data:{labels,datasets:[{label:'Nota média',data:notas,borderColor:C.bordo,backgroundColor:'rgba(104,5,5,0.15)',fill:true,tension:0.3,pointBackgroundColor:C.amarelo,pointBorderColor:C.bordo,pointBorderWidth:3,pointRadius:10,spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,min:0,max:3.0,grid:{color:'#eee'}}}}
+  });
+}
+
+function renderChartCategorias(data){
+  const cats = {Elogio:0,'Tempo/Velocidade':0,'Qualidade ingredientes':0,'Temperatura (frio)':0,'Pedido errado':0,'Quantidade/Porções':0,'Canal/App':0,'Taxa/Preço':0,'Localização/Expansão':0,Embalagem:0,'Outros':0};
+  const patterns = {
+    'Elogio':[/\botimo\b/i,/ótimo/i,/perfeit/i,/maravilh/i,/excelente/i,/sensacional/i,/gostoso/i,/delicioso/i,/melhor/i,/impecável/i,/parabéns/i,/top\b/i,/simpátic/i,/continue assim/i],
+    'Tempo/Velocidade':[/tempo/i,/demor/i,/rapid/i,/espera/i,/horário/i,/horario/i],
+    'Qualidade ingredientes':[/tomate passad/i,/batata mole/i,/ingredientes/i,/sal\b/i,/molho/i,/temperados/i,/passado/i,/novos/i,/maionese/i],
+    'Temperatura (frio)':[/frio/i,/gelad/i,/temperatura/i,/quente/i],
+    'Pedido errado':[/errad/i,/falt/i,/observa/i,/sem molho/i,/ketchup/i,/nunca mandaram/i,/conforme solicitad/i,/revisar/i,/montagem/i,/bagunçad/i],
+    'Quantidade/Porções':[/queijo/i,/mucho/i,/mucha/i,/recheio/i,/cheio/i,/menor/i,/diminuiu/i,/pouca/i,/mais\b/i],
+    'Canal/App':[/whatsapp/i,/whats\b/i,/\bapp\b/i,/rastre/i],
+    'Taxa/Preço':[/taxa/i,/preço/i,/promoção/i,/refrigerante/i,/alta/i],
+    'Localização/Expansão':[/filial/i,/menino deus/i,/santo antônio/i,/bairro/i,/perto/i,/longe/i],
+    'Embalagem':[/embalagem/i,/amassad/i]
+  };
+  data.forEach(d=>{
+    const m = d.melhoria;
+    if(!m) return;
+    const ml = m.toLowerCase();
+    if(['nd','ok','q','sim','não','nada'].includes(ml.trim())) return;
+    let matched = false;
+    for(const [cat,pats] of Object.entries(patterns)){
+      if(pats.some(p=>p.test(m))){cats[cat]++;matched=true;break;}
+    }
+    if(!matched) cats['Outros']++;
+  });
+  const labels = Object.keys(cats).filter(k=>cats[k]>0);
+  const vals = labels.map(l=>cats[l]);
+
+  charts.cat = new Chart(document.getElementById('chartCategorias'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data:vals,backgroundColor:['#27ae60',C.vermelho,'#e67e22',C.azul,'#c0392b',C.amarelo,'#9b59b6','#16a085',C.bordo,'#34495e','#95a5a6'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:14,padding:8,font:{size:11}}}}}
+  });
+
+  // dor list
+  const dorCont = document.getElementById('dorList');
+  dorCont.innerHTML = '';
+  const dores = Object.entries(cats).filter(([k,v])=>k!=='Elogio' && v>0).sort((a,b)=>b[1]-a[1]);
+  if(dores.length===0){dorCont.innerHTML='<div class="empty-state">Sem feedbacks de melhoria neste filtro</div>';return;}
+  const max = dores[0][1];
+  dores.forEach(([cat,n])=>{
+    const pct = (n*100/max).toFixed(0);
+    dorCont.innerHTML += `<div class="bar-row"><div class="bar-label"><span class="cat">${cat}</span><span class="num">${n}</span></div><div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
+  });
+}
+
+function renderChartDimensoes(data){
+  const grupos = {};
+  data.forEach(d=>{
+    if(!grupos[d.loja]) grupos[d.loja]={tempo:[],servico:[],qual:[],temp:[]};
+    if(d.tempo) grupos[d.loja].tempo.push(d.tempo);
+    if(d.servico) grupos[d.loja].servico.push(d.servico);
+    if(d.qual) grupos[d.loja].qual.push(d.qual);
+    if(d.temp) grupos[d.loja].temp.push(d.temp);
+  });
+  const lojas = Object.keys(grupos).filter(l=>grupos[l].tempo.length>0).slice(0,4);
+  const colors = [C.bordo,C.vermelho,C.amarelo,C.azul];
+  const datasets = lojas.map((l,i)=>{
+    const g = grupos[l];
+    const avg = arr=>arr.length ? arr.reduce((s,n)=>s+n,0)/arr.length : 0;
+    return {label:l.replace('Loja ',''),data:[avg(g.tempo),avg(g.servico),avg(g.qual),avg(g.temp)],borderColor:colors[i],backgroundColor:colors[i]+'33',pointBackgroundColor:colors[i],borderWidth:2};
+  });
+  charts.dim = new Chart(document.getElementById('chartDimensoes'),{
+    type:'radar',
+    data:{labels:['Tempo','Serviço','Qualidade','Temperatura'],datasets},
+    options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:false,min:0,max:3.0,grid:{color:'#ddd'},pointLabels:{font:{size:12,weight:'bold'}}}},plugins:{legend:{position:'top'}}}
+  });
+}
+
+function renderTabelaFeedbacks(data){
+  const tbody = document.querySelector('#tabelaFeedbacks tbody');
+  tbody.innerHTML = '';
+  const filtered = data.filter(d=>d.melhoria && d.melhoria.length>0);
+  if(filtered.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-state">Nenhum feedback com texto neste filtro</td></tr>';return;}
+  filtered.forEach(d=>{
+    let notaCls = 'pill-gray', notaTxt = d.nota||'—';
+    if(d.nota===3){notaCls='pill-green';}
+    else if(d.nota===2){notaCls='pill-yellow';}
+    else if(d.nota===1){notaCls='pill-red';}
+    tbody.innerHTML += `<tr><td>${d.data}</td><td>${d.loja.replace('Loja ','')}</td><td>${d.canal||'—'}</td><td><span class="pill ${notaCls}">${notaTxt}</span></td><td>${d.melhoria}</td></tr>`;
+  });
+}
+
+// ============ GOOGLE REVIEWS ============
+// Lê os reviews salvos pelo Apps Script na aba "Reviews" da planilha
+const REVIEWS_CSV_URL='https://docs.google.com/spreadsheets/d/1CUYDeXnBGsdpYNPSdVVmhChh1GvS7x_bU0Ts25daBFI/export?format=csv&gid=1693235993';
+
+function starsHtml(n,size){
+  const s=Math.round(n||0);
+  return `<span style="color:#FBBC04;font-size:${size||13}px;letter-spacing:1px">${'★'.repeat(s)}${'☆'.repeat(5-s)}</span>`;
+}
+
+async function loadGoogleReviews(){
+  const cont=document.getElementById('googleReviewsContent');
+  try{
+    const resp=await fetch(REVIEWS_CSV_URL+'&t='+Date.now());
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const text=await resp.text();
+    const lines=text.split('\n');
+    const results={};
+    for(let i=1;i<lines.length;i++){
+      if(!lines[i].trim())continue;
+      const c=parseCSVLine(lines[i]);
+      const loja=(c[0]||'').trim();
+      if(!loja||!c[1])continue;
+      try{ results[loja]=JSON.parse(c[1]); }catch(e){}
+    }
+    if(Object.keys(results).length===0)throw new Error('Sem dados');
+    googleReviewsData=results;
+    window.cachedGoogleReviews=results;
+    renderGoogleReviews(results);
+    renderResumo(); // atualiza resumo com dados do Google
+  }catch(e){
+    cont.innerHTML=`<div class="empty-state" style="color:#aaa">Google Reviews indisponível: ${e.message}</div>`;
+  }
+}
+
+function renderGoogleReviews(reviews){
+  const cont=document.getElementById('googleReviewsContent');
+  // filtrar pelas lojas ativas no seletor global
+  const lojas=Object.keys(reviews).filter(l=>lojasAtivas.size===0||lojasAtivas.has(l));
+  if(!lojas.length){cont.innerHTML='<div class="empty-state">Nenhuma loja selecionada</div>';return;}
+
+  const cards=lojas.map(loja=>{
+    const d=reviews[loja];
+    if(d.error){
+      return `<div class="review-store-card">
+        <div class="review-store-name">${loja.replace('Loja ','')}</div>
+        <p style="font-size:12px;color:#bbb;margin-top:8px">Dados indisponíveis</p>
+      </div>`;
+    }
+    const rat=d.rating?d.rating.toFixed(1):'—';
+    const reviewsHtml=(d.reviews||[]).map(r=>`
+      <div class="review-item">
+        <div class="review-header-row">
+          <span class="review-author">${r.author}</span>
+          ${starsHtml(r.rating,12)}
+        </div>
+        <div class="review-time-sm">${r.time}</div>
+        ${r.text?`<div class="review-text">${r.text}</div>`:''}
+      </div>`).join('');
+
+    return `<div class="review-store-card">
+      <div class="review-store-top">
+        <div>
+          <div class="review-store-name">${loja.replace('Loja ','')}</div>
+          <div class="review-stars-big">${'★'.repeat(Math.round(d.rating||0))}${'☆'.repeat(5-Math.round(d.rating||0))}</div>
+        </div>
+        <div class="review-rating-num">
+          <span class="review-num">${rat}</span>
+          <span class="review-total">${d.total?d.total.toLocaleString('pt-BR')+' avaliações':''}</span>
+        </div>
+      </div>
+      <div class="review-list">${reviewsHtml||'<div class="review-empty-loja">Sem avaliações recentes</div>'}</div>
+      <div class="google-logo">Google Reviews</div>
+    </div>`;
+  }).join('');
+
+  cont.innerHTML=`<div class="reviews-grid">${cards}</div>`;
+}
+
+// ============ ELOGIOS & RECLAMAÇÕES ============
+function renderTabelaResumo(data){
+  const SKIP = new Set(['nd','ok','q','sim','não','nao','nada','n','','ótimo','otimo','perfeito']);
+  const ELOGIO_PAT = [/perfeit/i,/maravilh/i,/excelente/i,/sensacional/i,/ótim/i,/otim/i,/gostoso/i,/delicioso/i,/impecável/i,/parabéns/i,/parabenss/i,/\btop\b/i,/simpátic/i,/continue assim/i,/amei\b/i,/adorei/i,/incrível/i,/tudo bem/i,/tudo ótimo/i,/tudo certo/i,/sempre maravilh/i,/qualidade impec/i,/já é excelente/i,/foi perfeito/i,/tudo perfect/i,/ótima/i];
+
+  function sortRecente(arr){
+    return [...arr].sort((a,b)=>{
+      if(b.mes!==a.mes) return b.mes.localeCompare(a.mes);
+      const pd=s=>{const[dd,mm,yy]=(s||'01/01/2026').split('/');return new Date(yy,mm-1,dd);};
+      return pd(b.data)-pd(a.data);
+    });
+  }
+
+  const comTexto = data.filter(d=>{
+    const t=(d.melhoria||'').trim();
+    return t.length>3 && !SKIP.has(t.toLowerCase());
+  });
+
+  const elogios = sortRecente(comTexto.filter(d=>ELOGIO_PAT.some(p=>p.test(d.melhoria)))).slice(0,5);
+  const reclamacoes = sortRecente(comTexto.filter(d=>d.nota && d.nota<=2)).slice(0,5);
+
+  // Elogios
+  const tbEl = document.querySelector('#tabelaElogios tbody');
+  tbEl.innerHTML='';
+  if(!elogios.length){
+    tbEl.innerHTML='<tr><td colspan="3" class="empty-state">Nenhum elogio neste filtro</td></tr>';
+  } else {
+    elogios.forEach(d=>{
+      tbEl.innerHTML+=`<tr><td style="white-space:nowrap">${d.data}</td><td style="white-space:nowrap">${d.loja.replace('Loja ','')}</td><td style="color:#155724">${d.melhoria}</td></tr>`;
+    });
+  }
+
+  // Reclamações
+  const tbRec = document.querySelector('#tabelaReclamacoes tbody');
+  tbRec.innerHTML='';
+  if(!reclamacoes.length){
+    tbRec.innerHTML='<tr><td colspan="4" class="empty-state">Nenhuma reclamação neste filtro</td></tr>';
+  } else {
+    reclamacoes.forEach(d=>{
+      const cls=d.nota===1?'pill-red':'pill-yellow';
+      const contato=d.contato||'—';
+      // detectar se é e-mail ou telefone para montar link clicável
+      let contatoHtml;
+      if(contato.includes('@')){
+        contatoHtml=`<a href="mailto:${contato}" style="color:#680505;font-weight:700">${contato}</a>`;
+      } else if(contato!=='—'){
+        const tel=contato.replace(/\D/g,'');
+        contatoHtml=`<a href="https://wa.me/55${tel}" target="_blank" style="color:#25d366;font-weight:700">📱 ${contato}</a>`;
+      } else {
+        contatoHtml=`<span style="color:#aaa">—</span>`;
+      }
+      tbRec.innerHTML+=`<tr><td style="white-space:nowrap">${d.data}</td><td style="white-space:nowrap">${d.loja.replace('Loja ','')}</td><td><span class="pill ${cls}">${d.nota}</span></td><td style="color:#721c24">${d.melhoria}</td><td style="white-space:nowrap">${contatoHtml}</td></tr>`;
+    });
+  }
+}
+
+// ============ RENDER ============
+function render(){
+  const data = getFiltered();
+  document.getElementById('filterBadge').textContent = `${data.length} registros`;
+  const lojasTxt = lojasAtivas.size === LOJAS_ALL.length ? 'Todas as lojas' : Array.from(lojasAtivas).map(l=>l.replace('Loja ','')).join(', ');
+  document.getElementById('filterInfo').innerHTML = `Mostrando: <b>${lojasTxt}</b> · ${document.getElementById('mesInicio').value} → ${document.getElementById('mesFim').value} · ${data.length} de ${RAW.length} feedbacks`;
+  destroyCharts();
+  renderKpis(calcKpis(data));
+  renderChartLojas(data);
+  renderChartMes(data);
+  renderChartCategorias(data);
+  renderChartDimensoes(data);
+  renderTabelaResumo(data);
+  renderTabelaFeedbacks(data);
+}
+
+// ============ GOOGLE SHEETS — ATUALIZAÇÃO AUTOMÁTICA ============
+const SHEET_CSV_URL='https://docs.google.com/spreadsheets/d/1CUYDeXnBGsdpYNPSdVVmhChh1GvS7x_bU0Ts25daBFI/export?format=csv';
+
+function parseCSVLine(line){
+  const r=[];let inQ=false,cur='';
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}
+    else if(ch===','&&!inQ){r.push(cur);cur='';}
+    else{cur+=ch;}
+  }
+  r.push(cur);return r;
+}
+
+function int3(v){const n=parseInt(v);return(n>=1&&n<=3)?n:null;}
+
+function buildRAWFromCSV(csv){
+  const lines=csv.split('\n'),raw=[];
+  for(let i=1;i<lines.length;i++){
+    const line=lines[i].trim();if(!line)continue;
+    const c=parseCSVLine(line);
+    const ts=(c[0]||'').trim();if(!ts)continue;
+    const m=ts.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(!m)continue;
+    const[,dd,mm,yyyy]=m;if(yyyy!=='2026')continue;
+    const mes=`${yyyy}-${mm}`,loja=(c[1]||'').trim(),data=(c[2]||'').trim();
+    const canal=(c[7]||'').trim();
+    if(canal.toLowerCase().includes('delivery')){
+      const nota=int3(c[11]);if(!nota)continue;
+      raw.push({loja,data,mes,melhoria:(c[3]||'').trim(),contato:(c[4]||'').trim(),canal:'Delivery',nota,tempo:int3(c[6]),servico:int3(c[8]),qual:int3(c[9]),temp:int3(c[10])});
+    } else if(canal.toLowerCase().includes('balc')){
+      const t=int3(c[14]),s=int3(c[15]),q1=int3(c[16]),q2=int3(c[17]);
+      const dims=[t,s,q1,q2].filter(v=>v!==null);if(!dims.length)continue;
+      const nota=Math.round(dims.reduce((a,b)=>a+b,0)/dims.length);
+      const qual=(q1!=null&&q2!=null)?Math.round((q1+q2)/2):(q1||q2);
+      raw.push({loja,data,mes,melhoria:((c[12]||'').trim()||(c[18]||'').trim()),contato:(c[13]||'').trim(),canal:'Balcão',nota,tempo:t,servico:s,qual,temp:null});
+    }
+  }
+  return raw;
+}
+
+function initUI(){
+  // Filtrar lojas por permissão do usuário
+  const auth=getAuth();
+  if(auth && auth.role!=='master' && auth.lojas && auth.lojas!=='todas'){
+    const allowed=auth.lojas.split(',').map(l=>l.trim()).filter(Boolean);
+    RAW=RAW.filter(r=>allowed.some(a=>r.loja===a));
+    LOJAS_ALL=[...new Set(RAW.map(r=>r.loja))].sort();
+    lojasAtivas=new Set(LOJAS_ALL);
+  }
+  initUserBar();
+  buildLojaChips();
+  ['mesInicio','mesFim','canalFiltro','notaFiltro'].forEach(id=>{
+    document.getElementById(id).addEventListener('change',render);
+  });
+  renderResumo(); // resumo inicial com dados de satisfação
+  render();
+  loadGoogleReviews(); // carrega Google Reviews em paralelo (atualiza resumo quando pronto)
+}
+
+async function loadData(){
+  const overlay=document.getElementById('loadingOverlay');
+  try{
+    const resp=await fetch(SHEET_CSV_URL);
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const text=await resp.text();
+    const fresh=buildRAWFromCSV(text);
+    if(fresh.length>0){
+      RAW=fresh;
+      LOJAS_ALL=[...new Set(RAW.map(r=>r.loja))].sort();
+      lojasAtivas=new Set(LOJAS_ALL);
+    }
+    overlay.style.display='none';
+    initUI();
+  }catch(e){
+    overlay.style.display='none';
+    const warn=document.createElement('div');
+    warn.style='background:#fff3cd;border:1px solid #ffc107;padding:10px 16px;border-radius:8px;margin-bottom:16px;font-size:12px;color:#856404;display:flex;align-items:center;gap:8px';
+    warn.innerHTML='⚠️ <span>Dados em cache (não foi possível atualizar do Google Sheets: '+e.message+'). <a href="" style="color:#856404">Recarregar</a></span>';
+    const container=document.querySelector('.container');
+    container.insertBefore(warn,container.querySelector('.filter-bar'));
+    initUI();
+  }
+}
+
+loadData();
+</script>
+
+</body>
+</html>
